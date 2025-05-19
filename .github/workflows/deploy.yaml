@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest  # GitHub 호스티드 러너
+    runs-on: self-hosted  # GitHub 호스티드 러너
 
     permissions:
       contents: read
