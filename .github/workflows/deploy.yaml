@@ -3,7 +3,7 @@ name: 🚀 Build and Push React App to GHCR
 on:
   push:
     branches: [main]
-  workflow_dispatch:  # 수동 실행도 가능
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -11,7 +11,7 @@ jobs:
 
     permissions:
       contents: read
-      packages: write  # GHCR 푸시 권한 부여
+      packages: write
 
     steps:
       - name: 📥 Checkout repository
@@ -26,10 +26,15 @@ jobs:
           OWNER_LC=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE=ghcr.io/$OWNER_LC/my-vite-app:latest" >> "$GITHUB_ENV"
 
-      - name: 🛠️ Build Docker image
+      - name: 🔧 Prepare buildx builder
         run: |
-          docker build -t $IMAGE -f ./docker/development/Dockerfile .
+          docker buildx create --use --name multiarch-builder || true
+          docker buildx inspect --bootstrap
 
-      - name: 📤 Push Docker image to GHCR
+      - name: 🛠️ Build and push multi-arch Docker image
         run: |
-          docker push $IMAGE
+          docker buildx build \
+            --platform linux/amd64,linux/arm64,linux/arm/v7 \
+            -t $IMAGE \
+            -f ./docker/development/Dockerfile \
+            --push .
